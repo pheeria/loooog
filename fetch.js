@@ -2,7 +2,15 @@ const fetch = require("node-fetch");
 const { JSDOM } = require("jsdom");
 const promtps = require("prompts");
 
-const get = async url => await fetch(url).then(res => res.text());
+const get = async url => {
+  let result = "";
+  try {
+    result = await fetch(url).then(res => res.text())
+  } catch(ex) {
+    // Connection Refused
+  }
+  return result;
+};
 
 const findAllLiveMatches = html => {
   const result = [];
@@ -70,13 +78,18 @@ const findSources = async url => {
 };
 
 const main = async () => {
-  const html = await get("http://gooool.org/");
-  const allLiveMatches = findAllLiveMatches(html);
-  const selectedMatch = await showMenu(allLiveMatches);
-  const iframes = await findIframes(selectedMatch);
-  const sources = await Promise.all(iframes.map(findSources));
+  try {
+    const html = await get("http://gooool.org/");
+    const allLiveMatches = findAllLiveMatches(html);
+    const selectedMatch = await showMenu(allLiveMatches);
+    const iframes = await findIframes(selectedMatch);
+    const sources = await Promise.all(iframes.map(findSources));
 
-  console.log(sources.filter(Boolean).join(" "));
+    console.log(sources.filter(Boolean).join(" "));
+  }
+  catch (ex) {
+    console.error(ex);
+  }
 };
 
 main();
